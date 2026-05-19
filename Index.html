@@ -134,9 +134,10 @@
         }
         .admin-active .aktivitet-tid-wrapper { display: flex; }
         
+        /* Större touch-vänlig yta för iPad */
         .aktivitet-tid-input {
             display: none; border: none; background: transparent; font-size: 11px; font-weight: 700; color: var(--text-muted);
-            width: 65px; outline: none; font-family: sans-serif; padding-right: 2px;
+            width: 65px; outline: none; font-family: sans-serif; padding: 4px 2px;
         }
         .admin-active .aktivitet-tid-input { display: inline-block; }
         .aktivitet-tid-text { font-size: 11px; font-weight: 700; color: var(--text-muted); display: none; }
@@ -739,7 +740,19 @@
         tidInput.addEventListener('input', () => {
             hanteraTidsÄndring(tidInput, tidText, kort);
         });
-        tidInput.onclick = (e) => { if(isAdmin) e.stopPropagation(); };
+
+        // Fix för iPad/iOS: Stoppa kortets klick-event från att "stjäla" trycket när man klickar på tidsväljaren
+        tidInput.addEventListener('click', (e) => {
+            if (isAdmin) {
+                e.stopPropagation();
+            }
+        });
+
+        tidInput.addEventListener('touchstart', (e) => {
+            if (isAdmin) {
+                e.stopPropagation();
+            }
+        });
 
         if (laddaIkon) {
             kort.setAttribute('data-custom', 'true');
