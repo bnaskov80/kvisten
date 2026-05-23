@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Kvistens digitala infotavla v2.2.0</title>
+    <title>Kvistens digitala infotavla v2.2.2</title>
     <style>
         :root {
             --bg-main: #f0f4f8;
@@ -41,16 +41,14 @@
             margin-bottom: 30px; position: relative;
         }
 
-        /* Fixerade knappar i hörnen */
-        .wake-lock-indicator, .print-btn {
-            position: fixed; bottom: 20px; background: white; border: none; border-radius: 50%;
+        /* Fixerad utskriftsknapp i hörnet */
+        .print-btn {
+            position: fixed; bottom: 20px; right: 20px; background: white; border: none; border-radius: 50%;
             width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
             cursor: pointer; font-size: 24px; transition: all 0.2s;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000;
         }
-        .wake-lock-indicator { right: 20px; }
-        .print-btn { right: 80px; }
-        .wake-lock-indicator:active, .print-btn:active { transform: scale(0.9); }
+        .print-btn:active { transform: scale(0.9); }
 
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; }
         .huvud-rubrik { font-size: 28px; font-weight: 800; color: #2d3748; display: flex; align-items: center; gap: 10px; margin-top: 10px; }
@@ -137,20 +135,22 @@
         }
         .aktivitet-kort.dragging { opacity: 0.4; }
         
-        /* Tidsväljare i veckovyn */
+        /* Tidsväljare i veckovyn - STÄNDIGT SYNLIG */
         .aktivitet-tid-wrapper {
-            position: absolute; top: 6px; left: 8px; display: none; align-items: center; gap: 4px;
+            position: absolute; top: 6px; left: 8px; display: flex; align-items: center; gap: 4px;
             background: #f1f5f9; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; color: var(--text-muted);
         }
-        .admin-active .aktivitet-tid-wrapper { display: flex; }
         
-        /* Större touch-vänlig yta för iPad */
+        /* INPUT syns enbart i upplåst läge */
         .aktivitet-tid-input {
             display: none; border: none; background: transparent; font-size: 11px; font-weight: 700; color: var(--text-muted);
             width: 65px; outline: none; font-family: sans-serif; padding: 4px 2px;
         }
         .admin-active .aktivitet-tid-input { display: inline-block; }
-        .aktivitet-tid-text { font-size: 11px; font-weight: 700; color: var(--text-muted); display: none; }
+        
+        /* TEXTEN syns som standard, men göms när man låser upp */
+        .aktivitet-tid-text { font-size: 11px; font-weight: 700; color: var(--text-muted); display: inline-block; }
+        .admin-active .aktivitet-tid-text { display: none; }
 
         /* Dynamisk analog klocka för fokusläget */
         .fokus-klock-container { display: none; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 20px; margin-top: 10px; }
@@ -172,7 +172,7 @@
 
         .grupper-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; pointer-events: none; }
         
-        /* Grupptaggar - ÄNDRAD TILL STÖRRE TEXT (13px) */
+        /* Grupptaggar */
         .grupp-tag { font-size: 13px; font-weight: 800; background: #e2e8f0; color: #2d3748; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; display: flex; align-items: center; gap: 5px; border: 1px solid #cbd5e0; transition: all 0.2s; pointer-events: auto; }
         .admin-active .grupp-tag:hover { background: var(--error); color: white; border-color: #fca5a5; transform: scale(0.9); cursor: pointer; }
 
@@ -224,7 +224,7 @@
         .aktivitet-kort.fokus-läge .aktivitet-ikon-badge { font-size: 80px; margin-bottom: 10px; }
         .aktivitet-kort.fokus-läge .aktivitet-namn { font-size: 32px; margin-bottom: 20px; }
         
-        /* Grupptaggar i fokusläge - ÄNDRAD TILL STÖRRE TEXT (18px) */
+        /* Grupptaggar i fokusläge */
         .aktivitet-kort.fokus-läge .grupp-tag { font-size: 18px; padding: 8px 18px; border-radius: 15px; gap: 6px; }
 
         @keyframes zoomInKort {
@@ -263,7 +263,6 @@
 
         /* Utskriftsregler */
         @media print {
-            /* Tvinga body att använda 100% av papperets bredd och nollställ flex-centreringen */
             body {
                 background: white;
                 padding: 0 !important;
@@ -273,10 +272,9 @@
                 display: block !important;
             }
 
-            .wake-lock-indicator, .print-btn, #adminBtn, #panel, .fokus-overlay, .custom-modal-kort, .version-tag, .fokus-klock-container, .fokus-timer-bar { display: none !important; }
+            .print-btn, #adminBtn, #panel, .fokus-overlay, .custom-modal-kort, .version-tag, .fokus-klock-container, .fokus-timer-bar { display: none !important; }
             .header, .top-grid { display: none !important; }
 
-            /* Tvinga tavlan att sträcka ut sig helt och hållet */
             .tavla {
                 box-shadow: none !important;
                 padding: 0 !important;
@@ -286,7 +284,6 @@
                 border-radius: 0 !important;
             }
 
-            /* Tvinga schemat att ta upp 100% av tavlans/papperets bredd */
             .schema-grid {
                 display: grid !important;
                 grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
@@ -318,7 +315,6 @@
             .aktivitet-tid-wrapper { display: none !important; }
             .grupp-tag { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; border: 1px solid #cbd5e0 !important; font-size: 12px !important; }
 
-            /* Sätter marginalen på själva papperet */
             @page { size: landscape; margin: 10mm; }
         }
     </style>
@@ -399,7 +395,6 @@
 </div>
 
 <button class="print-btn" onclick="window.print()" title="Skriv ut veckoschema">🖨️</button>
-<button class="wake-lock-indicator" onclick="requestWakeLock()" title="Håll skärmen vaken">💡</button>
 <button class="admin-btn-main" onclick="visaLoginModal()" id="adminBtn" style="margin-bottom: 20px;">Lås upp inställningar</button>
 
 <div id="panel" class="admin-panel">
@@ -420,7 +415,7 @@
         </div>
 
         <div class="admin-col">
-            <h3 style="margin-bottom:15px; font-size:14px; color:var(--warning);">🧥 BASREGLER FOR KLÄDER (°C)</h3>
+            <h3 style="margin-bottom:15px; font-size:14px; color:var(--warning);">🧥 BASREGLER FÖR KLÄDER (°C)</h3>
             <div id="klader-editor-container"></div>
             <button class="admin-btn-main" style="width:100%; background:var(--success);" onclick="laggTillRegel()">+ Ny basregel</button>
         </div>
@@ -441,7 +436,7 @@
     </div>
 </div>
 
-<div class="version-tag">v2.2.0</div>
+<div class="version-tag">v2.2.2</div>
 
 <script>
     const LOSENORD = "skola123";
@@ -451,7 +446,6 @@
     let inzoomatKort = null;
     
     let fokusTimer = null;
-    let fokusAnimationsTimer = null;
     const FOKUS_TID_MS = 20000;
 
     let kladRegler = [
@@ -460,22 +454,21 @@
         { min: 15, text: "Bara t-shirt går bra", ikon: "👕" }
     ];
 
+// Hitta raden "const ikonKarta = {" i din kod och ersätt hela den raden med denna utökade lista:
+
     const ikonKarta = {
-        'bad': '🏊', 'simma': '🏊', 'gympa': '👟', 'idrott': '⚽', 'fotboll': '⚽', 'lek': '🛝',
-        'mellis': '🍎', 'fika': '🍪', 'mat': '🍴', 'lunch': '🍱', 'skog': '🌲', 'ut': '🌳',
-        'pyssel': '🎨', 'rita': '🖍️', 'skapa': '✂️', 'film': '🎬', 'bio': '🍿', 'spel': '🎲',
-        'ipad': '📱', 'dator': '💻', 'läsa': '📚', 'biblo': '📖', 'musik': '🎵', 'dans': '💃',
-        'utflykt': '🚌', 'tåg': '🚂', 'vila': '🧘'
+        'bad': '🏊', 'simma': '🏊', 'gympa': '👟', 'idrott': '⚽', 'fotboll': '⚽', 'lek': '🛝', 'ute': '🌳', 'utegård': '🌳',
+        'mellis': '🍎', 'fika': '🍪', 'mat': '🍴', 'lunch': '🍱', 'frukt': '🍌', 'äta': '🍽️',
+        'skog': '🌲', 'natur': '🍄', 'utflykt': '🚌', 'tåg': '🚂', 'buss': '🚌',
+        'pyssel': '🎨', 'rita': '🖍️', 'skapa': '✂️', 'måla': '🖌️', 'ler': '🏺', 'bygga': '🧱',
+        'film': '🎬', 'bio': '🍿', 'spel': '🎲', 'ipad': '📱', 'dator': '💻', 'tv': '📺',
+        'läsa': '📚', 'biblo': '📖', 'saga': '📕', 'läxor': '✏️', 'räkna': '🧮',
+        'musik': '🎵', 'dans': '💃', 'sång': '🎤', 'samling': '🌟', 'röris': '🤸',
+        'vila': '🧘', 'sov': '😴', 'lugn': '🕯️', 'städ': '🧹', 'hjälpa': '🤝'
     };
 
     const gruppIkonMappning = { 'PLANETER': '🪐', 'SOLAR': '☀️', 'GALAXER': '🌀', 'MÅNAR': '🌙', 'STJÄRNOR': '⭐', 'KOMETER': '☄️', 'ALLA': '🌍' };
     const dagar = ['mandag', 'tisdag', 'onsdag', 'torsdag', 'fredag'];
-
-    async function requestWakeLock() {
-        if ('wakeLock' in navigator) {
-            try { await navigator.wakeLock.request('screen'); } catch (err) { }
-        }
-    }
 
     function createClockNumbers(clockElement) {
         clockElement.querySelectorAll('.clock-number').forEach(n => n.remove());
@@ -609,6 +602,9 @@
         const afterElement = getDragAfterElement(list, ev.clientY);
         if (afterElement == null) { list.appendChild(draggedElement); } else { list.insertBefore(draggedElement, afterElement); }
         draggedElement.onDragstartUpdateDag(targetDag);
+        
+        // Sorterar kolumnen kronologiskt efter att ett kort släppts i den
+        sorteraListaTid(targetDag);
         spara();
     }
 
@@ -618,6 +614,27 @@
             const box = child.getBoundingClientRect(); const offset = y - box.top - box.height / 2;
             if (offset < 0 && offset > closest.offset) return { offset: offset, element: child }; else return closest;
         }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
+
+    /* AUTOMATISK TIDSSORTERINGSFUNKTION */
+    function sorteraListaTid(dag) {
+        const lista = document.getElementById('lista-' + dag);
+        if (!lista) return;
+        
+        const kortArray = [...lista.querySelectorAll('.aktivitet-kort')];
+        
+        kortArray.sort((a, b) => {
+            const tidA = a.querySelector('.aktivitet-tid-input').value;
+            const tidB = b.querySelector('.aktivitet-tid-input').value;
+            
+            if (!tidA && !tidB) return 0;
+            if (!tidA) return 1;  // Kort utan tid hamnar sist
+            if (!tidB) return -1; // Kort utan tid hamnar sist
+            
+            return tidA.localeCompare(tidB);
+        });
+        
+        kortArray.forEach(kort => lista.appendChild(kort));
     }
 
     function startaFokusTimer(kort) {
@@ -698,15 +715,11 @@
             document.querySelectorAll('.lagg-till-btn, .radera-btn').forEach(b => b.style.display = 'flex');
             document.querySelectorAll('.aktivitet-namn, #info-texten').forEach(e => e.contentEditable = true);
             
-            document.querySelectorAll('.aktivitet-tid-wrapper').forEach(e => { e.style.display = 'flex'; });
-            document.querySelectorAll('.aktivitet-tid-input').forEach(e => { e.disabled = false; });
-            
             document.querySelectorAll('.aktivitet-ikon-badge').forEach(e => {
                 e.contentEditable = true;
                 e.setAttribute('data-manual-icon', e.getAttribute('data-custom') || "false");
             });
 
-            // Aktivera redigering av huvudikonen i rubriken
             const headerIkon = document.getElementById('tavla-ikon');
             headerIkon.contentEditable = true;
             headerIkon.style.background = '#f1f5f9';
@@ -741,7 +754,7 @@
         document.body.classList.remove('kort-fokus-aktiv');
     }
 
-    function hanteraTidsÄndring(input, textElement, kort) {
+    function hanteraKortTidsÄndring(input, textElement, kort, dag) {
         const tidVärde = input.value;
         if (tidVärde && tidVärde !== "") {
             textElement.innerText = tidVärde;
@@ -751,6 +764,9 @@
             kort.classList.remove('har-tid');
         }
         stallInKortKlocka(tidVärde, kort);
+        
+        // Kör automatisk sortering direkt vid tidsändring
+        sorteraListaTid(dag);
         spara();
     }
 
@@ -776,7 +792,7 @@
             <button class="radera-btn" onclick="this.parentElement.remove(); spara(); event.stopPropagation();" style="display:${isAdmin?'flex':'none'}" title="Radera aktivitet">🗑️</button>
             <div class="aktivitet-tid-wrapper">
                 <span>🕒</span>
-                <input type="time" class="aktivitet-tid-input" value="${sparadTid}" ${isAdmin ? '' : 'disabled'}>
+                <input type="time" class="aktivitet-tid-input" value="${sparadTid}">
                 <span class="aktivitet-tid-text">${sparadTid}</span>
             </div>
             
@@ -808,21 +824,11 @@
         }
 
         tidInput.addEventListener('input', () => {
-            hanteraTidsÄndring(tidInput, tidText, kort);
+            hanteraKortTidsÄndring(tidInput, tidText, kort, nuvarandeDag);
         });
 
-        // Fix för iPad/iOS: Stoppa kortets klick-event från att "stjäla" trycket när man klickar på tidsväljaren
-        tidInput.addEventListener('click', (e) => {
-            if (isAdmin) {
-                e.stopPropagation();
-            }
-        });
-
-        tidInput.addEventListener('touchstart', (e) => {
-            if (isAdmin) {
-                e.stopPropagation();
-            }
-        });
+        tidInput.addEventListener('click', (e) => { e.stopPropagation(); });
+        tidInput.addEventListener('touchstart', (e) => { e.stopPropagation(); });
 
         if (laddaIkon) {
             kort.setAttribute('data-custom', 'true');
@@ -854,6 +860,9 @@
 
         grupper.forEach(g => laggTillGruppTag(kort, g));
         lista.appendChild(kort);
+        
+        // Sortera vid nyskapande av kort på tavlan
+        sorteraListaTid(nuvarandeDag);
     }
 
     function uppdateraIkon(text, element) {
@@ -895,8 +904,6 @@
         localStorage.setItem('info_v210', document.getElementById('info-texten').innerText);
         localStorage.setItem('titel_v210', document.getElementById('tavla-titel').innerText);
         localStorage.setItem('regler_v210', JSON.stringify(kladRegler));
-        
-        // Spara den redigerbara huvudikonen
         localStorage.setItem('titel_ikon_v210', document.getElementById('tavla-ikon').innerText);
     }
 
@@ -911,13 +918,15 @@
         const s = JSON.parse(localStorage.getItem('schema_v210')) || JSON.parse(localStorage.getItem('schema_v200')) || JSON.parse(localStorage.getItem('schema_v195')) || JSON.parse(localStorage.getItem('schema_v194')) || JSON.parse(localStorage.getItem('schema_v193')) || JSON.parse(localStorage.getItem('schema_v192')) || JSON.parse(localStorage.getItem('schema_v191')) || JSON.parse(localStorage.getItem('schema_v190')) || JSON.parse(localStorage.getItem('schema_v180')) || JSON.parse(localStorage.getItem('schema_v170')) || JSON.parse(localStorage.getItem('schema_v151'));
         if(s) dagar.forEach(d => s[d].forEach(k => skapaKort(d, k.akt, k.grp, k.customIkon, k.tid)));
         
+        // Kör en initial sortering på alla dagar vid uppstart så allt ligger prydligt
+        dagar.forEach(d => sorteraListaTid(d));
+        
         const info = localStorage.getItem('info_v210') || localStorage.getItem('info_v200') || localStorage.getItem('info_v195') || localStorage.getItem('info_v194') || localStorage.getItem('info_v193') || localStorage.getItem('info_v192') || localStorage.getItem('info_v191') || localStorage.getItem('info_v190') || localStorage.getItem('info_v180') || localStorage.getItem('info_v170');
         if(info) document.getElementById('info-texten').innerText = info;
         
         const titel = localStorage.getItem('titel_v210') || localStorage.getItem('titel_v200') || localStorage.getItem('titel_v195') || localStorage.getItem('titel_v194') || localStorage.getItem('titel_v193') || localStorage.getItem('titel_v192') || localStorage.getItem('titel_v191') || localStorage.getItem('titel_v190') || localStorage.getItem('titel_v180') || localStorage.getItem('titel_v170');
         if(titel) document.getElementById('tavla-titel').innerText = titel;
         
-        // Ladda in huvudikonen om den finns sparad
         const titelIkon = localStorage.getItem('titel_ikon_v210');
         if(titelIkon) document.getElementById('tavla-ikon').innerText = titelIkon;
 
