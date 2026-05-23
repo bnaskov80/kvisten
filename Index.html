@@ -23,12 +23,22 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-main); padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; position: relative; }
-
+        body { 
+            min-height: 100vh;
+            width: 100vw;
+            margin: 0;
+            background-color: var(--bg-main); 
+            padding: 20px 20px 100px 20px; /* Extra padding i botten så knappar inte täcker innehåll */
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            position: relative; 
+        }
+        
         .tavla {
             width: 100%; max-width: 1300px; background: white; border-radius: 30px;
             padding: 30px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-            margin-bottom: 70px; position: relative;
+            margin-bottom: 30px; position: relative;
         }
 
         /* Fixerade knappar i hörnen */
@@ -38,8 +48,8 @@
             cursor: pointer; font-size: 24px; transition: all 0.2s;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 1000;
         }
-        .wake-lock-indicator { right: 80px; }
-        .print-btn { right: 140px; }
+        .wake-lock-indicator { right: 20px; }
+        .print-btn { right: 80px; }
         .wake-lock-indicator:active, .print-btn:active { transform: scale(0.9); }
 
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; }
@@ -91,11 +101,11 @@
         .drop1 { left: 10px; animation-delay: 0s; }
         .drop2 { left: 20px; animation-delay: 0.4s; }
         .drop3 { left: 28px; animation-delay: 0.8s; }
-        @keyframes fall { 0% { transform: translateY(-10px); opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(10px) opacity: 0; } }
+        @keyframes fall { 0% { transform: translateY(-10px) opacity: 0; } 50% { opacity: 1; } 100% { transform: translateY(10px) opacity: 0; } }
         .anim-snow-flake { font-size: 10px; color: #a5f3fc; position: absolute; bottom: -10px; opacity: 0; animation: flake-fall 2s linear infinite; }
         .flake1 { left: 8px; animation-delay: 0s; }
         .flake2 { left: 22px; animation-delay: 0.7s; }
-        @keyframes flake-fall { 0% { transform: translateY(-10px) translateX(0); opacity: 0; } 50% { opacity: 1; transform: translateY(0px) translateX(3px); } 100% { transform: translateY(10px) translateX(-3px) opacity: 0; } }
+        @keyframes flake-fall { 0% { transform: translateY(-10px) translateX(0); opacity: 0; } 50% { opacity: 1; transform: translateY(0px) translateX(3px); } 100% { transform: translateY(10px) translateX(-3px); opacity: 0; } }
         .anim-bolt { font-size: 16px; color: #fbbf24; position: absolute; bottom: -12px; left: 14px; animation: flash 1.5s ease-in-out infinite; }
         @keyframes flash { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
 
@@ -120,7 +130,7 @@
         .aktivitets-lista { display: flex; flex-direction: column; gap: 10px; min-height: 50px; }
         
         .aktivitet-kort { 
-            background: white; border-radius: 15px; padding: 16px 12px 12px 12px; position: relative; 
+            background: white; border-radius: 15px; padding: 22px 12px 16px 12px; position: relative; 
             box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; 
             transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, border-color 0.2s; 
             border: 2px solid transparent; overflow: hidden;
@@ -153,14 +163,17 @@
         }
         .aktivitet-kort.fokus-läge .fokus-timer-bar { display: block; }
 
-        /* Redigerbar ikon */
-        .aktivitet-ikon-badge { font-size: 32px; text-align: center; margin-bottom: 4px; transition: font-size 0.3s ease; display: block; border-radius: 8px; outline: none; }
+        /* Redigerbar ikon (42px) */
+        .aktivitet-ikon-badge { font-size: 42px; text-align: center; margin-bottom: 6px; transition: font-size 0.3s ease; display: block; border-radius: 8px; outline: none; }
         .admin-active .aktivitet-ikon-badge:hover { background: #f1f5f9; cursor: text; }
 
-        .aktivitet-namn { font-weight: 700; text-align: center; font-size: 16px; margin-bottom: 6px; outline: none; color: #1a202c; transition: font-size 0.3s ease; }
+        /* Aktivitetsnamn (20px) */
+        .aktivitet-namn { font-weight: 700; text-align: center; font-size: 20px; margin-bottom: 10px; outline: none; color: #1a202c; transition: font-size 0.3s ease; line-height: 1.3; }
 
         .grupper-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; pointer-events: none; }
-        .grupp-tag { font-size: 10px; font-weight: 800; background: #e2e8f0; color: #2d3748; padding: 3px 9px; border-radius: 10px; text-transform: uppercase; display: flex; align-items: center; gap: 4px; border: 1px solid #cbd5e0; transition: all 0.2s; pointer-events: auto; }
+        
+        /* Grupptaggar - ÄNDRAD TILL STÖRRE TEXT (13px) */
+        .grupp-tag { font-size: 13px; font-weight: 800; background: #e2e8f0; color: #2d3748; padding: 4px 10px; border-radius: 12px; text-transform: uppercase; display: flex; align-items: center; gap: 5px; border: 1px solid #cbd5e0; transition: all 0.2s; pointer-events: auto; }
         .admin-active .grupp-tag:hover { background: var(--error); color: white; border-color: #fca5a5; transform: scale(0.9); cursor: pointer; }
 
         /* Fokus-läge & Modaler */
@@ -170,7 +183,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             z-index: 2000;
-            width: 440px;
+            width: 460px;
             padding: 30px;
             border-radius: 25px;
             background: white;
@@ -210,7 +223,9 @@
         
         .aktivitet-kort.fokus-läge .aktivitet-ikon-badge { font-size: 80px; margin-bottom: 10px; }
         .aktivitet-kort.fokus-läge .aktivitet-namn { font-size: 32px; margin-bottom: 20px; }
-        .aktivitet-kort.fokus-läge .grupp-tag { font-size: 14px; padding: 6px 14px; border-radius: 15px; gap: 6px; }
+        
+        /* Grupptaggar i fokusläge - ÄNDRAD TILL STÖRRE TEXT (18px) */
+        .aktivitet-kort.fokus-läge .grupp-tag { font-size: 18px; padding: 8px 18px; border-radius: 15px; gap: 6px; }
 
         @keyframes zoomInKort {
             from { transform: translate(-50%, -50%) scale(0.7); opacity: 0; }
@@ -244,21 +259,66 @@
         .klad-regel { background: #2d3748; padding: 10px; border-radius: 10px; margin-bottom: 8px; display: grid; grid-template-columns: 50px 1fr 40px 30px; gap: 5px; align-items: center; }
         .klad-regel input { background: #4a5568; border: none; color: white; padding: 5px; border-radius: 5px; font-size: 12px; width: 100%; }
 
-        .version-tag { position: fixed; bottom: 25px; right: 20px; font-size: 10px; color: var(--text-muted); opacity: 0.5; }
+        .version-tag { position: fixed; bottom: 25px; left: 20px; font-size: 10px; color: var(--text-muted); opacity: 0.5; }
 
         /* Utskriftsregler */
         @media print {
-            body { background: white; padding: 0; margin: 0; min-height: auto; }
+            /* Tvinga body att använda 100% av papperets bredd och nollställ flex-centreringen */
+            body {
+                background: white;
+                padding: 0 !important;
+                margin: 0 !important;
+                min-height: auto !important;
+                width: 100% !important;
+                display: block !important;
+            }
+
             .wake-lock-indicator, .print-btn, #adminBtn, #panel, .fokus-overlay, .custom-modal-kort, .version-tag, .fokus-klock-container, .fokus-timer-bar { display: none !important; }
             .header, .top-grid { display: none !important; }
-            .tavla { box-shadow: none !important; padding: 0 !important; margin: 0 !important; max-width: 100% !important; width: 100% !important; border-radius: 0 !important; }
-            .schema-grid { display: grid !important; grid-template-columns: repeat(5, 1fr) !important; gap: 10px !important; width: 100% !important; }
+
+            /* Tvinga tavlan att sträcka ut sig helt och hållet */
+            .tavla {
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                border-radius: 0 !important;
+            }
+
+            /* Tvinga schemat att ta upp 100% av tavlans/papperets bredd */
+            .schema-grid {
+                display: grid !important;
+                grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+                gap: 12px !important;
+                width: 100% !important;
+            }
+
             .lagg-till-btn, .radera-btn { display: none !important; }
-            .dag-kolumn { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; min-height: auto !important; padding: 10px !important; border-radius: 15px !important; }
+
+            .dag-kolumn {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                min-height: auto !important;
+                padding: 10px !important;
+                border-radius: 15px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
             .dag-rubrik { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; font-size: 14px !important; }
-            .aktivitet-kort { box-shadow: none !important; border: 1px solid #cbd5e0 !important; page-break-inside: avoid; padding-top: 12px !important; }
+
+            .aktivitet-kort {
+                box-shadow: none !important;
+                border: 1px solid #cbd5e0 !important;
+                page-break-inside: avoid;
+                padding-top: 12px !important;
+                width: 100% !important;
+                box-sizing: border-box !important;
+            }
             .aktivitet-tid-wrapper { display: none !important; }
-            .grupp-tag { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; border: 1px solid #cbd5e0 !important; }
+            .grupp-tag { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; border: 1px solid #cbd5e0 !important; font-size: 12px !important; }
+
+            /* Sätter marginalen på själva papperet */
             @page { size: landscape; margin: 10mm; }
         }
     </style>
@@ -340,7 +400,7 @@
 
 <button class="print-btn" onclick="window.print()" title="Skriv ut veckoschema">🖨️</button>
 <button class="wake-lock-indicator" onclick="requestWakeLock()" title="Håll skärmen vaken">💡</button>
-<button class="admin-btn-main" onclick="visaLoginModal()" id="adminBtn">Lås upp inställningar</button>
+<button class="admin-btn-main" onclick="visaLoginModal()" id="adminBtn" style="margin-bottom: 20px;">Lås upp inställningar</button>
 
 <div id="panel" class="admin-panel">
     <div class="admin-grid">
@@ -348,13 +408,13 @@
             <h3 style="margin-bottom:15px; font-size:14px; color:var(--warning);">👥 GRUPPER</h3>
             <p style="font-size:11px; margin-bottom:10px; opacity:0.8;">Markera ett kort i schemat och klicka på en grupp nedan:</p>
             <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                <button onclick="laggTillGruppValt('PLANETER')" class="grupp-tag">🪐 PLANETER</button>
-                <button onclick="laggTillGruppValt('SOLAR')" class="grupp-tag">☀️ SOLAR</button>
-                <button onclick="laggTillGruppValt('GALAXER')" class="grupp-tag">🌀 GALAXER</button>
-                <button onclick="laggTillGruppValt('MÅNAR')" class="grupp-tag">🌙 MÅNAR</button>
-                <button onclick="laggTillGruppValt('STJÄRNOR')" class="grupp-tag">⭐ STJÄRNOR</button>
-                <button onclick="laggTillGruppValt('KOMETER')" class="grupp-tag">☄️ KOMETER</button>
-                <button onclick="laggTillGruppValt('ALLA')" class="grupp-tag" style="background:var(--accent); color:white;">🌍 ALLA</button>
+                <button onclick="laggTillGruppValt('PLANETER')" class="grupp-tag" style="font-size:11px;">🪐 PLANETER</button>
+                <button onclick="laggTillGruppValt('SOLAR')" class="grupp-tag" style="font-size:11px;">☀️ SOLAR</button>
+                <button onclick="laggTillGruppValt('GALAXER')" class="grupp-tag" style="font-size:11px;">🌀 GALAXER</button>
+                <button onclick="laggTillGruppValt('MÅNAR')" class="grupp-tag" style="font-size:11px;">🌙 MÅNAR</button>
+                <button onclick="laggTillGruppValt('STJÄRNOR')" class="grupp-tag" style="font-size:11px;">⭐ STJÄRNOR</button>
+                <button onclick="laggTillGruppValt('KOMETER')" class="grupp-tag" style="font-size:11px;">☄️ KOMETER</button>
+                <button onclick="laggTillGruppValt('ALLA')" class="grupp-tag" style="background:var(--accent); color:white; font-size:11px;">🌍 ALLA</button>
             </div>
             <button class="admin-btn-main" style="width:100%; background:var(--error); margin-top:20px;" onclick="if(confirm('Rensa ALLT?')) { localStorage.clear(); location.reload(); }">Nollställ tavla</button>
         </div>
@@ -586,6 +646,15 @@
         });
     }
 
+    function cambiaDirezioneAdminPanel(swap) {
+        const panel = document.getElementById('panel');
+        const grid = panel.querySelector('.admin-grid');
+        const cols = [...grid.querySelectorAll('.admin-col')];
+        if(swap && cols.length >= 3) {
+            grid.insertBefore(cols[2], cols[0]);
+        }
+    }
+
     function hanteraKortKlick(kort, event) {
         if (isAdmin) { markera(kort); return; }
         event.stopPropagation();
@@ -646,6 +715,7 @@
             laddaKladEditor();
             document.getElementById('titel-input').value = document.getElementById('tavla-titel').innerText;
             document.getElementById('vader-stad-input').value = localStorage.getItem('v-stad') || "Stockholm";
+            cambiaDirezioneAdminPanel(true);
         } else {
             document.getElementById('admin-login-modal').style.display = 'none';
             document.getElementById('admin-error-modal').style.display = 'flex';
