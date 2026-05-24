@@ -20,11 +20,11 @@
             --warning: #f6e05e;
 
             /* --- Ljusa NPF-pasteller --- */
-            --col-mandag: #7a6600; --bg-mandag: #fffde7;
-            --col-tisdag: #ad1457; --bg-tisdag: #fce4ec;
-            --col-onsdag: #2e7d32; --bg-onsdag: #e8f5e9;
-            --col-torsdag: #e65100; --bg-torsdag: #fff3e0;
-            --col-fredag: #1565c0; --bg-fredag: #e3f2fd;
+            --col-mandag: #f6e05e; --bg-mandag: #fffde7;
+            --col-tisdag: #fbb6ce; --bg-tisdag: #fce4ec;
+            --col-onsdag: #9ae6b4; --bg-onsdag: #e8f5e9;
+            --col-torsdag: #fbd38d; --bg-torsdag: #fff3e0;
+            --col-fredag: #90cdf4; --bg-fredag: #e3f2fd;
 
             /* --- Skuggor & Design-tokens --- */
             --shadow-soft: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
@@ -39,11 +39,11 @@
         #col-torsdag { background-color: var(--bg-torsdag); }
         #col-fredag { background-color: var(--bg-fredag); }
 
-        .mandag-r { background-color: var(--col-mandag); color: white; }
-        .tisdag-r { background-color: var(--col-tisdag); color: white; }
-        .onsdag-r { background-color: var(--col-onsdag); color: white; }
-        .torsdag-r { background-color: var(--col-torsdag); color: white; }
-        .fredag-r { background-color: var(--col-fredag); color: white; }
+        .mandag-r { background-color: var(--col-mandag); color: #2d3748; }
+        .tisdag-r { background-color: var(--col-tisdag); color: #2d3748; }
+        .onsdag-r { background-color: var(--col-onsdag); color: #2d3748; }
+        .torsdag-r { background-color: var(--col-torsdag); color: #2d3748; }
+        .fredag-r { background-color: var(--col-fredag); color: #2d3748; }
 
         body { 
             min-height: 100vh;
@@ -81,8 +81,9 @@
         .print-btn:active { transform: scale(0.9); }
 
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 30px; }
-        .huvud-rubrik { font-size: 28px; font-weight: 800; color: #2d3748; display: flex; align-items: center; gap: 10px; margin-top: 10px; }
-        
+        .huvud-rubrik { font-size: 28px; font-weight: 800; color: #2d3748; display: flex; align-items: center; gap: 12px; margin-top: 10px; flex-wrap: wrap; }
+        #tavla-ikon { display: flex; align-items: center; white-space: nowrap; flex-shrink: 0; min-height: 1.2em; outline: none; }
+
         .clock-section { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
 
     .analog-clock {
@@ -155,9 +156,23 @@
         .schema-grid { display: grid; grid-template-columns: 1fr; gap: 15px; align-items: start; }
         @media (min-width: 1024px) { .schema-grid { grid-template-columns: repeat(5, 1fr); } }
 
-        .dag-kolumn { display: flex; flex-direction: column; gap: 12px; padding: 12px; border-radius: 20px; min-height: 150px; }
-        .dag-kolumn.idag { border: 2px solid var(--accent); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        .dag-kolumn { display: flex; flex-direction: column; gap: 12px; padding: 12px; border-radius: 20px; min-height: 150px; transition: transform 0.3s ease; }
+        .dag-kolumn.idag { 
+            border: 2px solid var(--accent); 
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); 
+            animation: idag-puls 4s ease-in-out infinite;
+        }
         .dag-rubrik { font-size: 15px; font-weight: 800; padding: 8px; border-radius: 12px; text-align: center; color: white; text-transform: uppercase; }
+        
+        /* Dagvy-logik */
+        body.dag-vy-aktiv .dag-kolumn:not(.idag) { display: none !important; }
+        @media (min-width: 1024px) { body.dag-vy-aktiv .schema-grid { grid-template-columns: 1fr !important; } }
+
+        @keyframes idag-puls {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
 
         .aktivitets-lista { display: flex; flex-direction: column; gap: 10px; min-height: 50px; }
         
@@ -197,8 +212,19 @@
         .aktivitet-kort.fokus-läge .fokus-timer-bar { display: block; }
 
         /* Redigerbar ikon (42px) */
-        .aktivitet-ikon-badge { font-size: 42px; text-align: center; margin-bottom: 6px; transition: font-size 0.3s ease; display: block; border-radius: 8px; outline: none; }
-        .admin-active .aktivitet-ikon-badge:hover { background: #f1f5f9; cursor: text; }
+        .aktivitet-ikon-badge { 
+            font-size: 42px; 
+            text-align: center; 
+            margin: 0 auto 12px auto; 
+            transition: all 0.3s ease; 
+            display: flex; align-items: center; justify-content: center;
+            min-width: 70px; width: fit-content; height: 70px; 
+            padding: 0 15px;
+            white-space: nowrap;
+            background: #f8fafc; border-radius: 35px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+            outline: none; }
+        .admin-active .aktivitet-ikon-badge:hover { background: #e2e8f0; cursor: text; }
 
         /* Aktivitetsnamn (20px) */
         .aktivitet-namn { font-weight: 700; text-align: center; font-size: 20px; margin-bottom: 10px; outline: none; color: #1a202c; transition: font-size 0.3s ease; line-height: 1.3; }
@@ -224,10 +250,16 @@
             border: 2px solid var(--accent);
             animation: zoomInKort 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
+        
+        .aktivitet-kort.fokus-läge .aktivitet-ikon-badge {
+            min-width: 120px; width: fit-content; height: 120px;
+            border-radius: 60px;
+            padding: 0 25px;
+            background: var(--bg-main);
+        }
 
         .custom-modal-kort { display: none; flex-direction: column; align-items: center; text-align: center; }
         .custom-modal-kort h2 { font-size: 22px; font-weight: 800; color: #2d3748; margin-bottom: 15px; }
-
         .modal-input {
             width: 100%; padding: 12px; font-size: 16px; border: 2px solid #e2e8f0; border-radius: 12px;
             margin-bottom: 20px; outline: none; text-align: center; font-weight: 600; transition: border-color 0.2s;
@@ -376,7 +408,7 @@
 <div class="tavla">
     <div class="header">
         <div class="huvud-rubrik">
-            <span id="tavla-ikon" contenteditable="false" onblur="spara()" style="outline: none; border-radius: 8px; padding: 0 4px;">🚀</span> 
+            <span id="tavla-ikon" contenteditable="false" onblur="spara()">🚀</span> 
             <div id="tavla-titel" onblur="spara()">Kvistens digitala infotavla</div>
         </div>
         <div class="clock-section">
@@ -414,6 +446,10 @@
 
         <div class="glass-card" style="border-left: 5px solid var(--accent);">
             <div class="sektions-titel" style="color: var(--accent);">💡 Information</div>
+            <div id="dynamic-info" style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 12px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
+                <span id="vecka-visning" style="background: #edf2f7; padding: 2px 8px; border-radius: 6px; color: var(--text-main);"></span>
+                <span id="namnsdag-visning"></span>
+            </div>
             <div id="info-texten" contenteditable="false" onblur="spara()" data-placeholder="Klicka här för att skriva viktig information..."></div>
         </div>
     </div>
@@ -461,6 +497,9 @@
             <label style="font-size:11px; font-weight:bold;">STAD (VÄDER):</label>
             <input type="text" id="vader-stad-input" style="width:100%; padding:8px; margin:5px 0; border-radius:5px; border:none;" placeholder="T.ex. Stockholm">
             <button class="admin-btn-main" style="width:100%; background:var(--accent);" onclick="setVaderPos()" id="vader-sok-btn">Sök stad</button>
+
+            <label style="font-size:11px; font-weight:bold; margin-top:15px; display:block;">VISNINGSLÄGE:</label>
+            <button class="admin-btn-main" id="vy-toggle-btn" style="width:100%; background:var(--accent); margin-top:5px;" onclick="toggleVy()">Växla till Dagvy</button>
         </div>
     </div>
     

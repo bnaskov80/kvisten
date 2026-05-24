@@ -1,8 +1,24 @@
+ // --- KONFIGURATION FÖR MOLNSYNRONISERING ---
+ // Ersätt dessa med dina egna från Firebase Console -> Projektinställningar
+ const firebaseConfig = {
+     apiKey: "AIzaSyDtDtAD1tV6qV7bGr3eyVmbn84ZyiqxeI4",
+     authDomain: "kvistensinfotavla.firebaseapp.com",
+     projectId: "kvistensinfotavla",
+     storageBucket: "kvistensinfotavla.firebasestorage.app",
+     messagingSenderId: "196445782971",
+     appId: "1:196445782971:web:0ab04515d24e7075b6fa9e"
+ };
+
+ firebase.initializeApp(firebaseConfig);
+ const db = firebase.firestore();
+ const TAVLA_ID = "kvistens_tavla"; // Unikt ID för din tavla i molnet
+
  const LOSENORD = "skola123";
  let isAdmin = false;
  let valtKort = null;
  let draggedElement = null;
  let inzoomatKort = null;
+ let isDayView = false;
 
  let fokusTimer = null;
  const FOKUS_TID_MS = 20000;
@@ -14,14 +30,15 @@
  ];
 
  const ikonKarta = {
-     'bad': '🏊', 'simma': '🏊', 'gympa': '👟', 'idrott': '⚽', 'fotboll': '⚽', 'lek': '🛝', 'ute': '🌳', 'utegård': '🌳',
-     'mellis': '🍎', 'fika': '🍪', 'mat': '🍴', 'lunch': '🍱', 'frukt': '🍌', 'äta': '🍽️',
+     'bad': '🏊', 'simma': '🏊', 'gympa': '🤸', 'idrott': '👟', 'fotboll': '⚽', 'lek': '🛝', 'ute': '🌳', 'utegård': '🌳',
+     'mellis': '🥪', 'fika': '🍪', 'mat': '🍲', 'lunch': '🍱', 'frukt': '🍌', 'äta': '🍽️',
      'skog': '🌲', 'natur': '🍄', 'utflykt': '🚌', 'tåg': '🚂', 'buss': '🚌',
      'pyssel': '🎨', 'rita': '🖍️', 'skapa': '✂️', 'måla': '🖌️', 'ler': '🏺', 'bygga': '🧱',
      'film': '🎬', 'bio': '🍿', 'spel': '🎲', 'ipad': '📱', 'dator': '💻', 'tv': '📺',
      'läsa': '📚', 'biblo': '📖', 'saga': '📕', 'läxor': '✏️', 'räkna': '🧮',
-     'musik': '🎵', 'dans': '💃', 'sång': '🎤', 'samling': '🌟', 'röris': '🤸',
-     'vila': '🧘', 'sov': '😴', 'lugn': '🕯️', 'städ': '🧹', 'hjälpa': '🤝'
+     'musik': '🎵', 'dans': '💃', 'sång': '🎤', 'samling': '👥', 'röris': '🤸',
+     'vila': '🧘', 'sov': '😴', 'lugn': '🕯️', 'städ': '🧼', 'hjälpa': '🤝',
+     'rast': '🛝', 'skola': '🏫', 'hem': '🏠', 'fritids': '🎈'
  };
 
  const gruppIkonMappning = { 'PLANETER': '🪐', 'SOLAR': '☀️', 'GALAXER': '🌀', 'MÅNAR': '🌙', 'STJÄRNOR': '⭐', 'KOMETER': '☄️', 'ALLA': '🌍' };
@@ -93,6 +110,19 @@
              setTimeout(() => { btn.style.background = "var(--accent)"; btn.innerText = "Sök stad"; btn.disabled = false; }, 2000);
          }
      } catch(e) { clearInterval(interval); btn.style.background = "var(--error)"; btn.innerText = "❌ Fel vid sökning"; btn.disabled = false; }
+ }
+
+ async function hamtaDynamicInfo() {
+     try {
+         const res = await fetch('https://sholiday.faboul.se/dagar/v2.1/');
+         const data = await res.json();
+         const idag = data.dagar[0];
+         if(idag) {
+             document.getElementById('vecka-visning').innerText = "V." + idag.vecka;
+             document.getElementById('namnsdag-visning').innerText = "🌸 Namnsdag: " + idag.namnsdag.join(', ');
+             if(idag.flaggdag) document.getElementById('namnsdag-visning').innerHTML += ` <span title="${idag.flaggdag}">🇸🇪</span>`;
+         }
+     } catch(e) { console.log("Kunde inte hämta dynamisk info"); }
  }
 
  function byggAnimeradIkon(code) {
@@ -270,7 +300,7 @@
          document.getElementById('panel').style.display = "block";
          document.getElementById('adminBtn').style.display = "none";
          document.querySelectorAll('.lagg-till-btn, .radera-btn, .kopiera-btn').forEach(b => b.style.display = 'flex');
-         document.querySelectorAll('.aktivitet-namn, #info-texten, #tavla-titel').forEach(e => e.contentEditable = true);
+         document.querySelectorAll('.aktivitet-namn, #info-texten, #tavla-titel, #tavla-ikon').forEach(e => e.contentEditable = true);
 
          document.querySelectorAll('.aktivitet-ikon-badge').forEach(e => {
              e.contentEditable = true;
@@ -278,13 +308,15 @@
          });
 
          const headerIkon = document.getElementById('tavla-ikon');
-         if (headerIkon) headerIkon.style.display = 'none';
+         if (headerIkon) {
+             headerIkon.style.display = 'flex';
+         }
 
          const headerTitel = document.getElementById('tavla-titel');
          if (headerTitel) {
              headerTitel.style.display = 'inline-block';
-             headerTitel.style.paddingBottom = '0';
-             headerTitel.style.backgroundImage = "none";
+            headerTitel.style.paddingBottom = '0';
+            headerTitel.style.backgroundImage = "none";
          }
 
          laddaKladEditor();
@@ -423,10 +455,10 @@ function visaKopieringsDialog(kort) {
      </div>
 
      <div class="fokus-klock-container">
-     <div class="analog-clock" style="width: 130px; height: 130px; border: 4px solid #4a5568; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-     <div class="center-dot" style="width:10px; height:10px;"></div>
-     <div class="hand hour-hand fokus-hour-hand" style="width:5px; height:26%;"></div>
-     <div class="hand min-hand fokus-min-hand" style="width:3.5px; height:40%;"></div>
+     <div class="analog-clock" style="width: 130px; height: 130px; border: 2px solid #4a5568; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+     <div class="center-dot"></div>
+     <div class="hand hour-hand fokus-hour-hand"></div>
+     <div class="hand min-hand fokus-min-hand"></div>
      </div>
      <div class="fokus-digital-tid" style="font-size: 28px; font-weight: 900; color: #2d3748; background: #f1f5f9; padding: 2px 14px; border-radius: 12px; margin-top: 5px; letter-spacing: 1px;">--:--</div>
      </div>
@@ -436,6 +468,9 @@ function visaKopieringsDialog(kort) {
      <div class="grupper-container"></div>
      <div class="fokus-timer-bar"></div>
      `;
+
+     const fKlocka = kort.querySelector('.analog-clock');
+     if (fKlocka) createClockNumbers(fKlocka);
 
      const ikonBadge = kort.querySelector('.aktivitet-ikon-badge');
      ikonBadge.innerText = laddaIkon || '✨';
@@ -514,61 +549,102 @@ function visaKopieringsDialog(kort) {
      valtKort = kort; valtKort.style.borderColor = "var(--accent)";
  }
 
+ function toggleVy() {
+     isDayView = !isDayView;
+     applyVy();
+     localStorage.setItem('dayView_v210', isDayView);
+ }
+
+ function applyVy() {
+     const btn = document.getElementById('vy-toggle-btn');
+     if (isDayView) {
+         document.body.classList.add('dag-vy-aktiv');
+         if(btn) btn.innerText = "Visa hela veckan";
+     } else {
+         document.body.classList.remove('dag-vy-aktiv');
+         if(btn) btn.innerText = "Visa bara idag";
+     }
+ }
+
  function stangAdmin() { spara(); location.reload(); }
 
- function spara() {
+ async function spara() {
      const schema = {};
      dagar.forEach(d => {
          schema[d] = [...document.querySelectorAll(`#lista-${d} .aktivitet-kort`)].map(k => {
              const iconVal = k.querySelector('.aktivitet-ikon-badge').innerText;
-             
              return {
-             akt: k.querySelector('.aktivitet-namn').innerText,
-                                                                                             grp: [...k.querySelectorAll('.grupp-tag')].map(t => t.innerText.replace(/[^\wåäöÅÄÖ]/g, '').trim()),
-                                                                                             customIkon: k.getAttribute('data-custom') === 'true' ? iconVal : null,
-                                                                                             tid: k.querySelector('.aktivitet-tid-input').value
-         }});
+                 akt: k.querySelector('.aktivitet-namn').innerText,
+                 grp: [...k.querySelectorAll('.grupp-tag')].map(t => t.innerText.replace(/[^\wåäöÅÄÖ]/g, '').trim()),
+                 customIkon: k.getAttribute('data-custom') === 'true' ? iconVal : null,
+                 tid: k.querySelector('.aktivitet-tid-input').value
+             }
+         });
      });
-     localStorage.setItem('schema_v210', JSON.stringify(schema));
-     localStorage.setItem('info_v210', document.getElementById('info-texten').innerText);
-     localStorage.setItem('titel_v210', document.getElementById('tavla-titel').innerText);
-     localStorage.setItem('regler_v210', JSON.stringify(kladRegler));
-     localStorage.setItem('titel_ikon_v210', document.getElementById('tavla-ikon').innerText);
+
+     const dataAttSpara = {
+         schema: schema,
+         info: document.getElementById('info-texten').innerText,
+         titel: document.getElementById('tavla-titel').innerText,
+         regler: kladRegler,
+         titelIkon: document.getElementById('tavla-ikon').innerText,
+         isDayView: isDayView,
+         vaderStad: localStorage.getItem('v-stad') || "Stockholm",
+         senastUppdaterad: firebase.firestore.FieldValue.serverTimestamp()
+     };
+
+     localStorage.setItem('tavla_backup', JSON.stringify(dataAttSpara));
+
+     try {
+         await db.collection("inställningar").doc(TAVLA_ID).set(dataAttSpara);
+         console.log("Synkroniserat med molnet!");
+     } catch (error) {
+         console.error("Kunde inte spara till molnet:", error);
+     }
  }
 
- window.onload = () => {
+ window.onload = async () => {
      const mainClock = document.getElementById('analogClock');
-    if (mainClock) mainClock.style.borderColor = "#4a5568";
+     if (mainClock) mainClock.style.borderColor = "#4a5568";
      createClockNumbers(mainClock);
      updateClock();
      setInterval(updateClock, 1000);
      hamtaVaderData();
+     hamtaDynamicInfo();
      setInterval(hamtaVaderData, 1800000);
 
-     const s = JSON.parse(localStorage.getItem('schema_v210')) || JSON.parse(localStorage.getItem('schema_v200')) || JSON.parse(localStorage.getItem('schema_v195')) || JSON.parse(localStorage.getItem('schema_v194')) || JSON.parse(localStorage.getItem('schema_v193')) || JSON.parse(localStorage.getItem('schema_v192')) || JSON.parse(localStorage.getItem('schema_v191')) || JSON.parse(localStorage.getItem('schema_v190')) || JSON.parse(localStorage.getItem('schema_v180')) || JSON.parse(localStorage.getItem('schema_v170')) || JSON.parse(localStorage.getItem('schema_v151'));
-     if(s) dagar.forEach(d => s[d].forEach(k => skapaKort(d, k.akt, k.grp, k.customIkon, k.tid)));
-
-     // Kör en initial sortering på alla dagar vid uppstart så allt ligger prydligt
-     dagar.forEach(d => sorteraListaTid(d));
-
-     const info = localStorage.getItem('info_v210') || localStorage.getItem('info_v200') || localStorage.getItem('info_v195') || localStorage.getItem('info_v194') || localStorage.getItem('info_v193') || localStorage.getItem('info_v192') || localStorage.getItem('info_v191') || localStorage.getItem('info_v190') || localStorage.getItem('info_v180') || localStorage.getItem('info_v170');
-     if(info) document.getElementById('info-texten').innerText = info;
-
-     const titel = localStorage.getItem('titel_v210') || localStorage.getItem('titel_v200') || localStorage.getItem('titel_v195') || localStorage.getItem('titel_v194') || localStorage.getItem('titel_v193') || localStorage.getItem('titel_v192') || localStorage.getItem('titel_v191') || localStorage.getItem('titel_v190') || localStorage.getItem('titel_v180') || localStorage.getItem('titel_v170');
-     const ht = document.getElementById('tavla-titel');
-     if(titel && ht) ht.innerText = titel;
-     if(ht) {
-         ht.style.display = 'inline-block';
-         ht.style.paddingBottom = '0';
-         ht.style.backgroundImage = "none";
+     let molnData = null;
+     try {
+         const doc = await db.collection("inställningar").doc(TAVLA_ID).get();
+         if (doc.exists) molnData = doc.data();
+     } catch (error) {
+         console.log("Kunde inte hämta från molnet, använder backup.");
+         molnData = JSON.parse(localStorage.getItem('tavla_backup'));
      }
 
-     const tIkon = document.getElementById('tavla-ikon');
-     if(tIkon) tIkon.style.display = 'none';
+     if (molnData) {
+         if (molnData.schema) {
+             dagar.forEach(d => {
+                 if (molnData.schema[d]) molnData.schema[d].forEach(k => skapaKort(d, k.akt, k.grp, k.customIkon, k.tid));
+             });
+         }
 
-     const regler = localStorage.getItem('regler_v210') || localStorage.getItem('regler_v200') || localStorage.getItem('regler_v195') || localStorage.getItem('regler_v194') || localStorage.getItem('regler_v193') || localStorage.getItem('regler_v192') || localStorage.getItem('regler_v191') || localStorage.getItem('regler_v190') || localStorage.getItem('regler_v180') || localStorage.getItem('regler_v170');
-     if(regler) { kladRegler = JSON.parse(regler); }
+         document.getElementById('info-texten').innerText = molnData.info || "";
+         document.getElementById('tavla-titel').innerText = molnData.titel || "Infotavla";
+         if (molnData.regler) kladRegler = molnData.regler;
+         
+         const tIkon = document.getElementById('tavla-ikon');
+         if (tIkon) {
+             tIkon.innerText = molnData.titelIkon || "✨";
+             tIkon.style.display = 'flex';
+         }
 
+         isDayView = molnData.isDayView === true;
+         if (molnData.vaderStad) localStorage.setItem('v-stad', molnData.vaderStad);
+     }
+
+     dagar.forEach(d => sorteraListaTid(d));
      const d = new Date().getDay(); const m = {1:'mandag', 2:'tisdag', 3:'onsdag', 4:'torsdag', 5:'fredag'};
      if(m[d]) document.getElementById('col-' + m[d]).classList.add('idag');
+     applyVy();
  };
