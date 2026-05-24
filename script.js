@@ -163,7 +163,10 @@
          document.getElementById('klader-text').innerText = bastext;
          document.getElementById('klader-ikon').innerText = basikon;
          document.getElementById('vader-status').innerText = "🕒 Uppdaterat " + new Date().toLocaleTimeString('sv-SE', {hour:'2-digit', minute:'2-digit'});
-     } catch(e) { }
+     } catch(e) {
+         console.error("Väderfel:", e);
+         document.getElementById('vader-status').innerText = "⚠️ Kunde inte hämta väder";
+     }
  }
 
  function laddaKladEditor() {
