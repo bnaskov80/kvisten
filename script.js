@@ -13,8 +13,6 @@
 { min: 15, text: "Bara t-shirt går bra", ikon: "👕" }
  ];
 
- // Hitta raden "const ikonKarta = {" i din kod och ersätt hela den raden med denna utökade lista:
-
  const ikonKarta = {
      'bad': '🏊', 'simma': '🏊', 'gympa': '👟', 'idrott': '⚽', 'fotboll': '⚽', 'lek': '🛝', 'ute': '🌳', 'utegård': '🌳',
      'mellis': '🍎', 'fika': '🍪', 'mat': '🍴', 'lunch': '🍱', 'frukt': '🍌', 'äta': '🍽️',
@@ -34,7 +32,7 @@
      for (let i = 1; i <= 12; i++) {
          const numDiv = document.createElement('div');
          numDiv.className = `clock-number n${i}`;
-         numDiv.innerHTML = `<span>${i}</span>`;
+        numDiv.innerHTML = `<span style="color: #2d3748; font-weight: 600;">${i}</span>`;
          clockElement.appendChild(numDiv);
      }
  }
@@ -271,8 +269,8 @@
          document.body.classList.add('admin-active');
          document.getElementById('panel').style.display = "block";
          document.getElementById('adminBtn').style.display = "none";
-         document.querySelectorAll('.lagg-till-btn, .radera-btn').forEach(b => b.style.display = 'flex');
-         document.querySelectorAll('.aktivitet-namn, #info-texten').forEach(e => e.contentEditable = true);
+         document.querySelectorAll('.lagg-till-btn, .radera-btn, .kopiera-btn').forEach(b => b.style.display = 'flex');
+         document.querySelectorAll('.aktivitet-namn, #info-texten, #tavla-titel').forEach(e => e.contentEditable = true);
 
          document.querySelectorAll('.aktivitet-ikon-badge').forEach(e => {
              e.contentEditable = true;
@@ -280,12 +278,19 @@
          });
 
          const headerIkon = document.getElementById('tavla-ikon');
-         headerIkon.contentEditable = true;
-         headerIkon.style.background = '#f1f5f9';
-         headerIkon.title = 'Klicka för att byta emoji';
+         if (headerIkon) headerIkon.style.display = 'none';
+
+         const headerTitel = document.getElementById('tavla-titel');
+         if (headerTitel) {
+             headerTitel.style.display = 'inline-block';
+             headerTitel.style.paddingBottom = '0';
+             headerTitel.style.backgroundImage = "none";
+         }
 
          laddaKladEditor();
-         document.getElementById('titel-input').value = document.getElementById('tavla-titel').innerText;
+         const tInput = document.getElementById('titel-input');
+         tInput.value = headerTitel.innerText;
+         tInput.oninput = () => { headerTitel.innerText = tInput.value; };
          document.getElementById('vader-stad-input').value = localStorage.getItem('v-stad') || "Stockholm";
          cambiaDirezioneAdminPanel(true);
      } else {
@@ -329,6 +334,67 @@
      spara();
  }
 
+function visaKopieringsDialog(kort) {
+    const kallaDag = kort.parentElement.id.replace('lista-', '');
+    const dagNamn = { mandag: 'Måndag', tisdag: 'Tisdag', onsdag: 'Onsdag', torsdag: 'Torsdag', fredag: 'Fredag' };
+    
+    const gammal = document.getElementById('kopiera-modal');
+    if (gammal) gammal.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'kopiera-modal';
+    modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:20000; font-family: sans-serif;";
+    
+    const content = document.createElement('div');
+    content.style = "background:white; padding:25px; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.3); width:280px;";
+    content.innerHTML = `<h3 style="margin-top:0; color:#2d3748;">Kopiera aktivitet</h3><p style="font-size:14px; color:#4a5568;">Välj vilka dagar du vill kopiera "<b>${kort.querySelector('.aktivitet-namn').innerText}</b>" till:</p>`;
+    
+    const form = document.createElement('div');
+    form.style = "display:flex; flex-direction:column; gap:10px; margin:20px 0;";
+    
+    dagar.forEach(d => {
+        if (d === kallaDag) return;
+        const row = document.createElement('label');
+        row.style = "display:flex; align-items:center; gap:10px; cursor:pointer; padding:5px; border-radius:5px;";
+        row.innerHTML = `<input type="checkbox" value="${d}" style="width:18px; height:18px;"> <span>${dagNamn[d]}</span>`;
+        form.appendChild(row);
+    });
+    
+    content.appendChild(form);
+    
+    const footer = document.createElement('div');
+    footer.style = "display:flex; justify-content:flex-end; gap:10px; margin-top:20px;";
+    
+    const cancel = document.createElement('button');
+    cancel.innerText = "Avbryt";
+    cancel.style = "padding:8px 15px; border:none; border-radius:8px; cursor:pointer; background:#edf2f7; color:#4a5568; font-weight:bold;";
+    cancel.onclick = () => modal.remove();
+    
+    const confirm = document.createElement('button');
+    confirm.innerText = "Kopiera";
+    confirm.style = "padding:8px 15px; border:none; border-radius:8px; cursor:pointer; background:#4a7c44; color:white; font-weight:bold;";
+    confirm.onclick = () => {
+        const valda = [...form.querySelectorAll('input:checked')].map(i => i.value);
+        if (valda.length > 0) {
+            const aktText = kort.querySelector('.aktivitet-namn').innerText;
+            const tid = kort.querySelector('.aktivitet-tid-input').value;
+            const ikon = kort.querySelector('.aktivitet-ikon-badge').innerText;
+            const ärCustom = kort.getAttribute('data-custom') === 'true';
+            const grupper = [...kort.querySelectorAll('.grupp-tag')].map(t => t.innerText.replace(/[^\wåäöÅÄÖ]/g, '').trim());
+
+            valda.forEach(dag => skapaKort(dag, aktText, grupper, ärCustom ? ikon : null, tid));
+            spara();
+        }
+        modal.remove();
+    };
+    
+    footer.appendChild(cancel);
+    footer.appendChild(confirm);
+    content.appendChild(footer);
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+}
+
  function skapaKort(dag, aktText = "", grupper = [], laddaIkon = null, laddaTid = "") {
      let nuvarandeDag = dag;
      const lista = document.getElementById('lista-' + nuvarandeDag);
@@ -349,6 +415,7 @@
 
      kort.innerHTML = `
      <button class="radera-btn" onclick="this.parentElement.remove(); spara(); event.stopPropagation();" style="display:${isAdmin?'flex':'none'}" title="Radera aktivitet">🗑️</button>
+     <button class="kopiera-btn" onclick="visaKopieringsDialog(this.parentElement); event.stopPropagation();" style="display:${isAdmin?'flex':'none'}; position: absolute; top: 5px; right: 35px;" title="Kopiera till andra dagar">📋</button>
      <div class="aktivitet-tid-wrapper">
      <span>🕒</span>
      <input type="time" class="aktivitet-tid-input" value="${sparadTid}">
@@ -356,7 +423,7 @@
      </div>
 
      <div class="fokus-klock-container">
-     <div class="analog-clock" style="width: 130px; height: 130px; border-width: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+     <div class="analog-clock" style="width: 130px; height: 130px; border: 4px solid #4a5568; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
      <div class="center-dot" style="width:10px; height:10px;"></div>
      <div class="hand hour-hand fokus-hour-hand" style="width:5px; height:26%;"></div>
      <div class="hand min-hand fokus-min-hand" style="width:3.5px; height:40%;"></div>
@@ -364,16 +431,15 @@
      <div class="fokus-digital-tid" style="font-size: 28px; font-weight: 900; color: #2d3748; background: #f1f5f9; padding: 2px 14px; border-radius: 12px; margin-top: 5px; letter-spacing: 1px;">--:--</div>
      </div>
 
-     <div class="aktivitet-ikon-badge" contenteditable="${isAdmin}">${laddaIkon || '✨'}</div>
+     <div class="aktivitet-ikon-badge" contenteditable="${isAdmin}"></div>
      <div class="aktivitet-namn" contenteditable="${isAdmin}">${aktText}</div>
      <div class="grupper-container"></div>
      <div class="fokus-timer-bar"></div>
      `;
 
-     const fClock = kort.querySelector('.fokus-klock-container .analog-clock');
-     createClockNumbers(fClock);
-
      const ikonBadge = kort.querySelector('.aktivitet-ikon-badge');
+     ikonBadge.innerText = laddaIkon || '✨';
+
      const namnFalt = kort.querySelector('.aktivitet-namn');
      const tidInput = kort.querySelector('.aktivitet-tid-input');
      const tidText = kort.querySelector('.aktivitet-tid-text');
@@ -425,8 +491,9 @@
  }
 
  function uppdateraIkon(text, element) {
-     let hittadIkon = '✨'; const t = text.toLowerCase();
-     for (let nyckel in ikonKarta) { if (t.includes(nyckel)) { hittadIkon = ikonKarta[nyckel]; break; } }
+     let hittadIkon = '✨'; 
+     const t = text.toLowerCase();
+     for (let k in ikonKarta) { if (t.includes(k)) { hittadIkon = ikonKarta[k]; break; } }
      element.innerText = hittadIkon;
  }
 
@@ -452,12 +519,15 @@
  function spara() {
      const schema = {};
      dagar.forEach(d => {
-         schema[d] = [...document.querySelectorAll(`#lista-${d} .aktivitet-kort`)].map(k => ({
+         schema[d] = [...document.querySelectorAll(`#lista-${d} .aktivitet-kort`)].map(k => {
+             const iconVal = k.querySelector('.aktivitet-ikon-badge').innerText;
+             
+             return {
              akt: k.querySelector('.aktivitet-namn').innerText,
                                                                                              grp: [...k.querySelectorAll('.grupp-tag')].map(t => t.innerText.replace(/[^\wåäöÅÄÖ]/g, '').trim()),
-                                                                                             customIkon: k.getAttribute('data-custom') === 'true' ? k.querySelector('.aktivitet-ikon-badge').innerText : null,
+                                                                                             customIkon: k.getAttribute('data-custom') === 'true' ? iconVal : null,
                                                                                              tid: k.querySelector('.aktivitet-tid-input').value
-         }));
+         }});
      });
      localStorage.setItem('schema_v210', JSON.stringify(schema));
      localStorage.setItem('info_v210', document.getElementById('info-texten').innerText);
@@ -468,6 +538,7 @@
 
  window.onload = () => {
      const mainClock = document.getElementById('analogClock');
+    if (mainClock) mainClock.style.borderColor = "#4a5568";
      createClockNumbers(mainClock);
      updateClock();
      setInterval(updateClock, 1000);
@@ -484,10 +555,16 @@
      if(info) document.getElementById('info-texten').innerText = info;
 
      const titel = localStorage.getItem('titel_v210') || localStorage.getItem('titel_v200') || localStorage.getItem('titel_v195') || localStorage.getItem('titel_v194') || localStorage.getItem('titel_v193') || localStorage.getItem('titel_v192') || localStorage.getItem('titel_v191') || localStorage.getItem('titel_v190') || localStorage.getItem('titel_v180') || localStorage.getItem('titel_v170');
-     if(titel) document.getElementById('tavla-titel').innerText = titel;
+     const ht = document.getElementById('tavla-titel');
+     if(titel && ht) ht.innerText = titel;
+     if(ht) {
+         ht.style.display = 'inline-block';
+         ht.style.paddingBottom = '0';
+         ht.style.backgroundImage = "none";
+     }
 
-     const titelIkon = localStorage.getItem('titel_ikon_v210');
-     if(titelIkon) document.getElementById('tavla-ikon').innerText = titelIkon;
+     const tIkon = document.getElementById('tavla-ikon');
+     if(tIkon) tIkon.style.display = 'none';
 
      const regler = localStorage.getItem('regler_v210') || localStorage.getItem('regler_v200') || localStorage.getItem('regler_v195') || localStorage.getItem('regler_v194') || localStorage.getItem('regler_v193') || localStorage.getItem('regler_v192') || localStorage.getItem('regler_v191') || localStorage.getItem('regler_v190') || localStorage.getItem('regler_v180') || localStorage.getItem('regler_v170');
      if(regler) { kladRegler = JSON.parse(regler); }
