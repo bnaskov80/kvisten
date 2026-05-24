@@ -556,6 +556,7 @@ function visaKopieringsDialog(kort) {
      isDayView = !isDayView;
      applyVy();
      localStorage.setItem('dayView_v210', isDayView);
+     spara();
  }
 
  function applyVy() {
@@ -569,7 +570,7 @@ function visaKopieringsDialog(kort) {
      }
  }
 
- function stangAdmin() { spara(); location.reload(); }
+ async function stangAdmin() { await spara(); location.reload(); }
 
  async function spara() {
      const schema = {};
