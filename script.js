@@ -112,6 +112,10 @@
      } catch(e) { clearInterval(interval); btn.style.background = "var(--error)"; btn.innerText = "❌ Fel vid sökning"; btn.disabled = false; }
  }
 
+ function refreshIcons() {
+     // Phosphor Web Components/Fonts uppdateras automatiskt när DOM ändras
+ }
+
  async function hamtaDynamicInfo() {
      try {
          const res = await fetch('https://sholiday.faboul.se/dagar/v2.1/');
@@ -119,6 +123,8 @@
          const idag = data.dagar[0];
          if(idag) {
              document.getElementById('vecka-visning').innerText = "V." + idag.vecka;
+             const printVecka = document.getElementById('print-vecka');
+             if(printVecka) printVecka.innerText = idag.vecka;
              document.getElementById('namnsdag-visning').innerText = "🌸 Namnsdag: " + idag.namnsdag.join(', ');
              if(idag.flaggdag) document.getElementById('namnsdag-visning').innerHTML += ` <span title="${idag.flaggdag}">🇸🇪</span>`;
          }
@@ -275,6 +281,7 @@
      inzoomatKort = kort;
      document.body.classList.add('kort-fokus-aktiv');
      kort.classList.add('fokus-läge');
+     adjustIconSize(kort.querySelector('.aktivitet-ikon-badge'));
 
      const tidInput = kort.querySelector('.aktivitet-tid-input');
      stallInKortKlocka(tidInput.value, kort);
@@ -345,7 +352,9 @@
  function stängAllaModalerOchFokus() {
      nollstallFokusTimers();
      if (inzoomatKort) {
+         const badge = inzoomatKort.querySelector('.aktivitet-ikon-badge');
          inzoomatKort.classList.remove('fokus-läge');
+         if (badge) adjustIconSize(badge);
          inzoomatKort = null;
      }
      document.getElementById('admin-login-modal').style.display = 'none';
@@ -476,8 +485,6 @@ function visaKopieringsDialog(kort) {
      if (fKlocka) createClockNumbers(fKlocka);
 
      const ikonBadge = kort.querySelector('.aktivitet-ikon-badge');
-     ikonBadge.innerText = laddaIkon || '✨';
-
      const namnFalt = kort.querySelector('.aktivitet-namn');
      const tidInput = kort.querySelector('.aktivitet-tid-input');
      const tidText = kort.querySelector('.aktivitet-tid-text');
@@ -496,9 +503,11 @@ function visaKopieringsDialog(kort) {
      if (laddaIkon) {
          kort.setAttribute('data-custom', 'true');
          ikonBadge.setAttribute('data-manual-icon', 'true');
+         ikonBadge.innerText = laddaIkon;
      } else {
          uppdateraIkon(aktText, ikonBadge);
      }
+     adjustIconSize(ikonBadge);
 
      namnFalt.onblur = () => {
          if (ikonBadge.getAttribute('data-manual-icon') !== 'true') {
@@ -510,29 +519,55 @@ function visaKopieringsDialog(kort) {
 
      ikonBadge.onclick = (e) => { if(isAdmin) e.stopPropagation(); };
      ikonBadge.onblur = () => {
-         if (ikonBadge.innerText.trim() === "" || ikonBadge.innerText === "✨") {
+         const typedText = ikonBadge.innerText.trim();
+         if (typedText === "") {
              ikonBadge.setAttribute('data-manual-icon', 'false');
              kort.removeAttribute('data-custom');
              uppdateraIkon(namnFalt.innerText, ikonBadge);
          } else {
              ikonBadge.setAttribute('data-manual-icon', 'true');
              kort.setAttribute('data-custom', 'true');
+             adjustIconSize(ikonBadge);
          }
          spara();
      };
 
      grupper.forEach(g => laggTillGruppTag(kort, g));
      lista.appendChild(kort);
+     refreshIcons();
 
      // Sortera vid nyskapande av kort på tavlan
      sorteraListaTid(nuvarandeDag);
  }
 
+ function adjustIconSize(element) {
+     const parentKort = element.closest('.aktivitet-kort');
+     if (!parentKort) return;
+     const isFokus = parentKort.classList.contains('fokus-läge');
+     const text = element.innerText.trim();
+     const lines = text.split('\n').filter(l => l.trim().length > 0).length;
+     const charCount = text.replace(/\s/g, '').length;
+     
+     let size;
+     if (isFokus) {
+         if (lines >= 3 || charCount > 6) size = "50px";
+         else if (lines >= 2 || charCount > 2) size = "80px";
+         else size = "120px";
+     } else {
+         if (lines >= 3 || charCount > 6) size = "20px";
+         else if (lines >= 2 || charCount > 3) size = "28px";
+         else size = "42px";
+     }
+     element.style.fontSize = size;
+ }
+
  function uppdateraIkon(text, element) {
-     let hittadIkon = '✨'; 
+     let hittadIkon = '✨';
      const t = text.toLowerCase();
      for (let k in ikonKarta) { if (t.includes(k)) { hittadIkon = ikonKarta[k]; break; } }
      element.innerText = hittadIkon;
+     adjustIconSize(element);
+     refreshIcons();
  }
 
  function laggTillGruppTag(kort, gruppNamn) {
@@ -541,9 +576,11 @@ function visaKopieringsDialog(kort) {
      if (existerande.includes(gruppNamn)) return;
      const tag = document.createElement('span');
      tag.className = 'grupp-tag';
-     tag.innerHTML = `<span>${gruppIkonMappning[gruppNamn] || '🚀'}</span> ${gruppNamn}`;
+     const gIkon = gruppIkonMappning[gruppNamn] || '🚀';
+     tag.innerHTML = `<span>${gIkon}</span> ${gruppNamn}`;
      tag.onclick = (e) => { if(isAdmin) { e.stopPropagation(); tag.remove(); spara(); } };
      container.appendChild(tag);
+     refreshIcons();
  }
 
  function laggTillGruppValt(g) { if(valtKort) { laggTillGruppTag(valtKort, g); spara(); } }
@@ -576,11 +613,10 @@ function visaKopieringsDialog(kort) {
      const schema = {};
      dagar.forEach(d => {
          schema[d] = [...document.querySelectorAll(`#lista-${d} .aktivitet-kort`)].map(k => {
-             const iconVal = k.querySelector('.aktivitet-ikon-badge').innerText;
              return {
                  akt: k.querySelector('.aktivitet-namn').innerText,
                  grp: [...k.querySelectorAll('.grupp-tag')].map(t => t.innerText.replace(/[^\wåäöÅÄÖ]/g, '').trim()),
-                 customIkon: k.getAttribute('data-custom') === 'true' ? iconVal : null,
+                 customIkon: k.getAttribute('data-custom') === 'true' ? k.querySelector('.aktivitet-ikon-badge').innerText : null,
                  tid: k.querySelector('.aktivitet-tid-input').value
              }
          });
@@ -589,7 +625,7 @@ function visaKopieringsDialog(kort) {
      const dataAttSpara = {
          schema: schema,
          info: document.getElementById('info-texten').innerText,
-         titel: document.getElementById('tavla-titel').innerText,
+         titel: document.getElementById('tavla-titel').innerText, // Titeln är ren text, så innerText är OK här
          regler: kladRegler,
          titelIkon: document.getElementById('tavla-ikon').innerText,
          isDayView: isDayView,
@@ -604,6 +640,19 @@ function visaKopieringsDialog(kort) {
          console.log("Synkroniserat med molnet!");
      } catch (error) {
          console.error("Kunde inte spara till molnet:", error);
+     }
+ }
+
+ async function nollstallTavla() {
+     if(confirm('Vill du rensa ALLT på tavlan? Detta tar även bort informationen från molnet.')) {
+         localStorage.clear();
+         try {
+             await db.collection("inställningar").doc(TAVLA_ID).delete();
+             location.reload();
+         } catch (e) {
+             console.error("Kunde inte nollställa molnet:", e);
+             location.reload();
+         }
      }
  }
 
@@ -639,14 +688,14 @@ function visaKopieringsDialog(kort) {
          
          const tIkon = document.getElementById('tavla-ikon');
          if (tIkon) {
-             tIkon.innerText = molnData.titelIkon || "✨";
+             tIkon.innerText = molnData.titelIkon || '🚀';
              tIkon.style.display = 'flex';
          }
 
          isDayView = molnData.isDayView === true;
          if (molnData.vaderStad) localStorage.setItem('v-stad', molnData.vaderStad);
      }
-
+     refreshIcons();
      dagar.forEach(d => sorteraListaTid(d));
      const d = new Date().getDay(); const m = {1:'mandag', 2:'tisdag', 3:'onsdag', 4:'torsdag', 5:'fredag'};
      if(m[d]) document.getElementById('col-' + m[d]).classList.add('idag');
