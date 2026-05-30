@@ -1,19 +1,3 @@
- // --- KONFIGURATION FÖR MOLNSYNRONISERING ---
- // Ersätt dessa med dina egna från Firebase Console -> Projektinställningar
- const firebaseConfig = {
-     apiKey: "AIzaSyDtDtAD1tV6qV7bGr3eyVmbn84ZyiqxeI4",
-     authDomain: "kvistensinfotavla.firebaseapp.com",
-     projectId: "kvistensinfotavla",
-     storageBucket: "kvistensinfotavla.firebasestorage.app",
-     messagingSenderId: "196445782971",
-     appId: "1:196445782971:web:0ab04515d24e7075b6fa9e"
- };
-
- firebase.initializeApp(firebaseConfig);
- const db = firebase.firestore();
- const TAVLA_ID = "kvistens_tavla"; // Unikt ID för din tavla i molnet
-
- const LOSENORD = "skola123";
  let isAdmin = false;
  let valtKort = null;
  let draggedElement = null;
@@ -60,16 +44,31 @@
      document.getElementById('sec-hand').style.transform = `rotate(${(s/60)*360}deg)`;
      document.getElementById('min-hand').style.transform = `rotate(${((m/60)*360)+((s/60)*6)}deg)`;
      document.getElementById('hour-hand').style.transform = `rotate(${((h/12)*360)+((m/60)*30)}deg)`;
-     document.getElementById('datum').innerText = now.toLocaleDateString('sv-SE', {weekday:'long', day:'numeric', month:'long'});
+     
+     const nyttDatum = now.toLocaleDateString('sv-SE', {weekday:'long', day:'numeric', month:'long'});
+     const datumElement = document.getElementById('datum');
+     if (datumElement.innerText !== nyttDatum) {
+         datumElement.innerText = nyttDatum;
+     }
+
+     // Uppdatera klockan i fokusläge om den är öppen
+     if (inzoomatKort && inzoomatKort.classList.contains('har-tid')) {
+         const tidInput = inzoomatKort.querySelector('.aktivitet-tid-input');
+         stallInKortKlocka(tidInput.value, inzoomatKort);
+     }
  }
 
  function stallInKortKlocka(tidVarde, kort) {
      const hHand = kort.querySelector('.fokus-hour-hand');
      const mHand = kort.querySelector('.fokus-min-hand');
      const dText = kort.querySelector('.fokus-digital-tid');
+     const wedge = kort.querySelector('.fokus-wedge');
+     const countdown = kort.querySelector('.fokus-countdown-text');
 
      if (!tidVarde || tidVarde === "") {
          if(dText) dText.innerText = "--:--";
+         if(wedge) wedge.setAttribute('d', '');
+         if(countdown) countdown.innerText = "";
          return;
      }
 
@@ -83,6 +82,59 @@
 
      if(hHand) hHand.style.transform = `rotate(${timmarGrader}deg)`;
      if(mHand) mHand.style.transform = `rotate(${minuterGrader}deg)`;
+
+     // --- Beräkna tårtbit (från NU till STARTTID) ---
+     const nu = new Date();
+     const nuH = nu.getHours();
+     const nuM = nu.getMinutes();
+     const nuMinuter = nuH * 60 + nuM;
+
+     const startMinuter = timmar * 60 + minuter;
+     let diff = startMinuter - nuMinuter;
+
+     // Om tiden har passerat eller är mer än 12h framåt, rita inget
+     if (diff <= 0 || diff > 720 || !wedge) {
+         if(wedge) wedge.setAttribute('d', '');
+         if(countdown) countdown.innerText = diff <= 0 && diff > -30 ? "Börjar nu!" : "";
+         return;
+     }
+
+     if(countdown) {
+         if (diff >= 60) {
+             const h = Math.floor(diff / 60);
+             const m = diff % 60;
+             countdown.innerText = m > 0 ? `${h} tim ${m} min kvar` : `${h} tim kvar`;
+         } else {
+             countdown.innerText = `${diff} min kvar`;
+         }
+     }
+
+     // SVG-matematik för tårtbiten
+     const startVinkel = ((nuH % 12 + nuM / 60) / 12) * 360;
+     const slutVinkel = timmarGrader;
+     
+     const r = 45; // Radie
+     const cx = 50; // Centrum X
+     const cy = 50; // Centrum Y
+
+     const rad = (deg) => (deg * Math.PI) / 180;
+     
+     const x1 = cx + r * Math.cos(rad(startVinkel));
+     const y1 = cy + r * Math.sin(rad(startVinkel));
+     const x2 = cx + r * Math.cos(rad(slutVinkel));
+     const y2 = cy + r * Math.sin(rad(slutVinkel));
+
+     // Om tårtbiten är större än 180 grader behöver SVG en "large-arc-flag"
+     const vinkelDiff = (slutVinkel - startVinkel + 360) % 360;
+     const largeArcFlag = vinkelDiff > 180 ? 1 : 0;
+
+     const d = `
+         M ${cx} ${cy}
+         L ${x1} ${y1}
+         A ${r} ${r} 0 ${largeArcFlag} 1 ${x2} ${y2}
+         Z
+     `;
+     wedge.setAttribute('d', d);
  }
 
  async function setVaderPos() {
@@ -332,7 +384,6 @@
          laddaKladEditor();
          const tInput = document.getElementById('titel-input');
          tInput.value = headerTitel.innerText;
-         tInput.oninput = () => { headerTitel.innerText = tInput.value; };
          document.getElementById('vader-stad-input').value = localStorage.getItem('v-stad') || "Stockholm";
          cambiaDirezioneAdminPanel(true);
      } else {
@@ -468,11 +519,15 @@ function visaKopieringsDialog(kort) {
 
      <div class="fokus-klock-container">
      <div class="analog-clock" style="width: 130px; height: 130px; border: 2px solid #4a5568; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+         <svg class="fokus-clock-svg" viewBox="0 0 100 100">
+             <path class="fokus-wedge" d=""></path>
+         </svg>
      <div class="center-dot"></div>
      <div class="hand hour-hand fokus-hour-hand"></div>
      <div class="hand min-hand fokus-min-hand"></div>
      </div>
      <div class="fokus-digital-tid" style="font-size: 28px; font-weight: 900; color: #2d3748; background: #f1f5f9; padding: 2px 14px; border-radius: 12px; margin-top: 5px; letter-spacing: 1px;">--:--</div>
+     <div class="fokus-countdown-text"></div>
      </div>
 
      <div class="aktivitet-ikon-badge" contenteditable="${isAdmin}"></div>
@@ -665,6 +720,45 @@ function visaKopieringsDialog(kort) {
      hamtaVaderData();
      hamtaDynamicInfo();
      setInterval(hamtaVaderData, 1800000);
+
+     // Koppla händelselyssnare (Event Listeners)
+     document.querySelector('.fokus-overlay').addEventListener('click', stängAllaModalerOchFokus);
+     document.getElementById('btn-modal-avbryt').addEventListener('click', stängAllaModalerOchFokus);
+     document.getElementById('btn-modal-login').addEventListener('click', verifieraLösenordModal);
+     document.getElementById('btn-modal-retry').addEventListener('click', öppnaLoginModaligen);
+     
+     document.getElementById('tavla-ikon').addEventListener('blur', spara);
+     document.getElementById('tavla-titel').addEventListener('blur', spara);
+     document.getElementById('info-texten').addEventListener('blur', spara);
+     
+     document.querySelectorAll('.lagg-till-btn').forEach(btn => {
+         btn.addEventListener('click', () => skapaKort(btn.dataset.dag, ''));
+     });
+     
+     document.querySelectorAll('.aktivitets-lista').forEach(lista => {
+         lista.addEventListener('dragover', allowDrop);
+         lista.addEventListener('drop', handleDrop);
+     });
+     
+     document.querySelector('.print-btn').addEventListener('click', () => window.print());
+     document.getElementById('adminBtn').addEventListener('click', visaLoginModal);
+     
+     document.querySelectorAll('.btn-grupp').forEach(btn => {
+         btn.addEventListener('click', () => laggTillGruppValt(btn.dataset.grupp));
+     });
+     
+     document.getElementById('btn-nollstall').addEventListener('click', nollstallTavla);
+     document.getElementById('btn-ny-regel').addEventListener('click', laggTillRegel);
+     document.getElementById('vader-sok-btn').addEventListener('click', setVaderPos);
+     document.getElementById('vy-toggle-btn').addEventListener('click', toggleVy);
+     
+     const tInput = document.getElementById('titel-input');
+     tInput.addEventListener('input', () => {
+         document.getElementById('tavla-titel').innerText = tInput.value;
+         spara();
+     });
+     
+     document.getElementById('btn-spara-stang').addEventListener('click', stangAdmin);
 
      let molnData = null;
      try {
