@@ -794,4 +794,11 @@ function visaKopieringsDialog(kort) {
      const d = new Date().getDay(); const m = {1:'mandag', 2:'tisdag', 3:'onsdag', 4:'torsdag', 5:'fredag'};
      if(m[d]) document.getElementById('col-' + m[d]).classList.add('idag');
      applyVy();
+
+    // Registrera Service Worker för PWA
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+            .then(() => console.log('Service Worker registrerad för PWA!'))
+            .catch(err => console.error('Service Worker fel:', err));
+    }
  };
