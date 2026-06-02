@@ -85,6 +85,18 @@
 
      // --- Beräkna tårtbit (från NU till STARTTID) ---
      const nu = new Date();
+
+     const dagMappning = {1:'mandag', 2:'tisdag', 3:'onsdag', 4:'torsdag', 5:'fredag'};
+     const idagStr = dagMappning[nu.getDay()];
+     const lista = kort.closest('.aktivitets-lista');
+     const arIdag = lista ? lista.getAttribute('data-dag') === idagStr : false;
+
+     if (!arIdag) {
+         if(wedge) wedge.setAttribute('d', '');
+         if(countdown) countdown.innerText = "";
+         return;
+     }
+
      const nuH = nu.getHours();
      const nuM = nu.getMinutes();
      const nuMinuter = nuH * 60 + nuM;
